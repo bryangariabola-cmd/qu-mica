@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Interactivo de Química Inorgánica</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        chemistry: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .node-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .node-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 24px -10px rgba(14, 165, 233, 0.5);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0ea5e9;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased overflow-x-hidden">
+
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-50 glass border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-sky-500/20 text-sky-400 rounded-lg border border-sky-500/30">
+                    <i data-lucide="atom" class="w-6 h-6 animate-spin-slow"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white tracking-wide">Química Inorgánica</h1>
+                    <p class="text-xs text-sky-400">Mapa Digital Interactivo de Compuestos</p>
+                </div>
+            </div>
+            
+            <nav class="flex items-center space-x-2 sm:space-x-4">
+                <button onclick="switchTab('map')" id="btn-tab-map" class="px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center space-x-2 bg-sky-600 text-white shadow-lg shadow-sky-600/30">
+                    <i data-lucide="network" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Mapa Interactivo</span>
+                </button>
+                <button onclick="switchTab('quiz')" id="btn-tab-quiz" class="px-4 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-white hover:bg-slate-800 flex items-center space-x-2">
+                    <i data-lucide="help-circle" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Mini-Retos</span>
+                </button>
+                <button onclick="switchTab('game')" id="btn-tab-game" class="px-4 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-white hover:bg-slate-800 flex items-center space-x-2">
+                    <i data-lucide="shapes" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Clasificador</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- TAB 1: MAPA INTERACTIVO -->
+        <section id="tab-map" class="space-y-8">
+            <!-- Intro & Instructions -->
+            <div class="glass p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i data-lucide="compass" class="text-sky-400"></i>
+                        Explorador de Compuestos Químicos
+                    </h2>
+                    <p class="text-sm text-slate-400 mt-1">Haz clic en cualquier grupo funcional para ver su fórmula, características, los 3 tipos de nomenclatura y ejemplos prácticos.</p>
+                </div>
+                <div class="flex items-center space-x-2 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 text-xs text-slate-400">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>7 Grupos Funcionales</span>
+                </div>
+            </div>
+
+            <!-- Canvas/Tree Container -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="nodes-grid">
+                <!-- Javascript populates cards here dynamically -->
+            </div>
+        </section>
+
+        <!-- TAB 2: MINI-RETOS / QUIZ -->
+        <section id="tab-quiz" class="hidden space-y-6">
+            <div class="glass p-6 rounded-2xl border border-slate-800 text-center max-w-2xl mx-auto">
+                <div class="inline-flex p-3 bg-purple-500/20 text-purple-400 rounded-full mb-4 border border-purple-500/30">
+                    <i data-lucide="brain-circuit" class="w-8 h-8"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-white">Desafío de Nomenclatura</h2>
+                <p class="text-sm text-slate-400 mt-2">Pon a prueba tus conocimientos identificando la nomenclatura IUPAC, Stock y Tradicional correcta.</p>
+                
+                <div class="mt-8 bg-slate-900/90 p-6 rounded-xl border border-slate-800 text-left space-y-4" id="quiz-container">
+                    <!-- Dynamic Question Area -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: CLASIFICADOR (DRAG & DROP) -->
+        <section id="tab-game" class="hidden space-y-6">
+            <div class="glass p-6 rounded-2xl border border-slate-800">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2 mb-2">
+                    <i data-lucide="layers" class="text-amber-400"></i>
+                    Juego de Clasificación de Compuestos
+                </h2>
+                <p class="text-sm text-slate-400 mb-6">Selecciona una fórmula química y asignala a la categoría correspondiente.</p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Formula Source Box -->
+                    <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+                        <h3 class="font-semibold text-slate-200 text-sm mb-4 flex items-center gap-2">
+                            <i data-lucide="test-tube" class="w-4 h-4 text-sky-400"></i>
+                            Fórmulas por Clasificar
+                        </h3>
+                        <div id="drag-items" class="flex flex-wrap gap-2">
+                            <!-- Draggable items loaded dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Targets -->
+                    <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4" id="drop-targets">
+                        <!-- Drop targets loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Dynamic Modal for Compound Details -->
+    <div id="detail-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative space-y-6 overflow-y-auto max-h-[90vh]">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-all">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <div class="flex items-center space-x-4">
+                <div id="modal-icon" class="p-3 bg-sky-500/20 text-sky-400 rounded-xl border border-sky-500/30">
+                    <i data-lucide="flame" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <span id="modal-badge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">Óxido Ácido</span>
+                    <h3 id="modal-title" class="text-2xl font-bold text-white mt-1">Óxidos Ácidos (Anhídridos)</h3>
+                </div>
+            </div>
+
+            <!-- Formula Box -->
+            <div class="bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Estructura / Fórmula General</p>
+                <div id="modal-formula" class="font-mono text-xl text-sky-400 font-semibold">No Metal + Oxígeno (NM + O)</div>
+            </div>
+
+            <!-- Characteristics -->
+            <div>
+                <h4 class="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <i data-lucide="info" class="w-4 h-4 text-sky-400"></i>
+                    Propiedades y Características
+                </h4>
+                <p id="modal-desc" class="text-slate-300 text-sm leading-relaxed bg-slate-950/30 p-4 rounded-xl border border-slate-800/50">
+                    Son compuestos binarios formados por la combinación de un no metal con oxígeno. Al reaccionar con agua forman oxiácidos.
+                </p>
+            </div>
+
+            <!-- Nomenclatures -->
+            <div>
+                <h4 class="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i data-lucide="book-open" class="w-4 h-4 text-emerald-400"></i>
+                    Tipos de Nomenclatura
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="bg-slate-950/60 p-3 rounded-lg border border-slate-800">
+                        <span class="text-xs text-emerald-400 font-semibold block mb-1">IUPAC / Sistemática</span>
+                        <p id="modal-nom-iupac" class="text-xs text-slate-300">Usa prefijos numéricos (mono, di, tri, tetra).</p>
+                    </div>
+                    <div class="bg-slate-950/60 p-3 rounded-lg border border-slate-800">
+                        <span class="text-xs text-indigo-400 font-semibold block mb-1">Stock</span>
+                        <p id="modal-nom-stock" class="text-xs text-slate-300">Indica el número de oxidación con números romanos.</p>
+                    </div>
+                    <div class="bg-slate-950/60 p-3 rounded-lg border border-slate-800">
+                        <span class="text-xs text-amber-400 font-semibold block mb-1">Tradicional</span>
+                        <p id="modal-nom-trad" class="text-xs text-slate-300">Usa sufijos y prefijos (hipo- -oso, -oso, -ico, per- -ico).</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Examples -->
+            <div>
+                <h4 class="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i data-lucide="flask-conical" class="w-4 h-4 text-purple-400"></i>
+                    Ejemplos Representativos
+                </h4>
+                <div id="modal-examples" class="space-y-2">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data & Scripts -->
+    <script>
+        const compoundsData = [
+            {
+                id: 'oxidos-acidos',
+                name: 'Óxidos Ácidos',
+                alias: 'Anhídridos',
+                formula: 'No Metal + Oxígeno (NM + O)',
+                icon: 'flame',
+                color: 'sky',
+                desc: 'Compuestos binarios formados por la combinación de un no metal con oxígeno. Al reaccionar con agua producen oxiácidos.',
+                nomenclatures: {
+                    iupac: 'Prefijo (mono, di, tri...) + óxido + de + prefijo + no metal.',
+                    stock: 'Óxido de + no metal + (valencia en romanos).',
+                    tradicional: 'Anhídrido + no metal con sufijos (oso/ico, hipo/per).'
+                },
+                examples: [
+                    { formula: 'CO₂', iupac: 'Dióxido de carbono', stock: 'Óxido de carbono (IV)', trad: 'Anhídrido carbónico' },
+                    { formula: 'SO₃', iupac: 'Trióxido de azufre', stock: 'Óxido de azufre (VI)', trad: 'Anhídrido sulfúrico' }
+                ]
+            },
+            {
+                id: 'oxidos-basicos',
+                name: 'Óxidos Básicos',
+                alias: 'Óxidos Metálicos',
+                formula: 'Metal + Oxígeno (M + O)',
+                icon: 'anvil',
+                color: 'amber',
+                desc: 'Compuestos binarios formados por la unión de un metal con oxígeno. Al reaccionar con agua producen hidróxidos o bases.',
+                nomenclatures: {
+                    iupac: 'Prefijo + óxido + de + prefijo + metal.',
+                    stock: 'Óxido de + metal + (valencia en romanos entre paréntesis).',
+                    tradicional: 'Óxido + metal terminado en -oso (menor valencia) o -ico (mayor valencia).'
+                },
+                examples: [
+                    { formula: 'Fe₂O₃', iupac: 'Trióxido de dihierro', stock: 'Óxido de hierro (III)', trad: 'Óxido férrico' },
+                    { formula: 'CaO', iupac: 'Monóxido de calcio', stock: 'Óxido de calcio', trad: 'Óxido cálcico' }
+                ]
+            },
+            {
+                id: 'hidroxidos',
+                name: 'Hidróxidos',
+                alias: 'Bases',
+                formula: 'Metal + Grupo Hidroxilo M(OH)ₙ',
+                icon: 'droplet',
+                color: 'emerald',
+                desc: 'Compuestos ternarios caracterizados por poseer el anión hidróxido (OH)⁻. Tienen propiedades básicas y neutralizan ácidos.',
+                nomenclatures: {
+                    iupac: 'Prefijo + hidróxido + de + metal.',
+                    stock: 'Hidróxido de + metal + (valencia en romanos).',
+                    tradicional: 'Hidróxido + metal terminado en -oso / -ico.'
+                },
+                examples: [
+                    { formula: 'NaOH', iupac: 'Hidróxido de sodio', stock: 'Hidróxido de sodio', trad: 'Hidróxido sódico' },
+                    { formula: 'Cu(OH)₂', iupac: 'Dihidróxido de cobre', stock: 'Hidróxido de cobre (II)', trad: 'Hidróxido cúprico' }
+                ]
+            },
+            {
+                id: 'oxiacidos',
+                name: 'Oxiácidos',
+                alias: 'Ácidos Oxácidos',
+                formula: 'Hidrógeno + No Metal + Oxígeno (H + NM + O)',
+                icon: 'sparkles',
+                color: 'purple',
+                desc: 'Compuestos ternarios obtenidos al reaccionar un óxido ácido con agua. Liberan protones H⁺ en disolución acuosa.',
+                nomenclatures: {
+                    iupac: 'Ácido + oxo/dioxo/trioxo + nombre del no metal en -ico + (valencia).',
+                    stock: 'Sistemática funcional estándar.',
+                    tradicional: 'Ácido + raíz del no metal con prefijos/sufijos (hipo, oso, ico, per).'
+                },
+                examples: [
+                    { formula: 'H₂SO₄', iupac: 'Ácido tetraoxosulfúrico (VI)', stock: 'Tetraoxosulfato (VI) de hidrógeno', trad: 'Ácido sulfúrico' },
+                    { formula: 'HNO₃', iupac: 'Ácido trioxonítrico (V)', stock: 'Trioxonitrato (V) de hidrógeno', trad: 'Ácido nítrico' }
+                ]
+            },
+            {
+                id: 'hidracidos',
+                name: 'Hidrácidos',
+                alias: 'Ácidos Binarios',
+                formula: 'Hidrógeno + No Metal (H + NM [Halógeno/Anfígeno])',
+                icon: 'zap',
+                color: 'rose',
+                desc: 'Compuestos binarios solubles en agua compuestos por hidrógeno y un no metal de los grupos 16 (VI A) o 17 (VII A).',
+                nomenclatures: {
+                    iupac: 'No metal con terminación -uro + de hidrógeno (estado gaseoso).',
+                    stock: 'Similar a la sistemática.',
+                    tradicional: 'Ácido + raíz del no metal + sufijo -hídrico (en solución acuosa).'
+                },
+                examples: [
+                    { formula: 'HCl (ac)', iupac: 'Cloruro de hidrógeno', stock: 'Cloruro de hidrógeno', trad: 'Ácido clorhídrico' },
+                    { formula: 'H₂S (ac)', iupac: 'Sulfuro de hidrógeno', stock: 'Sulfuro de hidrógeno', trad: 'Ácido sulfhídrico' }
+                ]
+            },
+            {
+                id: 'oxisales',
+                name: 'Oxisales',
+                alias: 'Sales Ternarias',
+                formula: 'Metal + No Metal + Oxígeno (M + NM + O)',
+                icon: 'box',
+                color: 'indigo',
+                desc: 'Compuestos ternarios resultantes de la sustitución de los hidrógenos de un oxiácido por un catión metálico.',
+                nomenclatures: {
+                    iupac: 'Nombre del oxoanión + de + metal (con valencia).',
+                    stock: 'Sustitución del anión oxoácido.',
+                    tradicional: 'Cambia sufijos del ácido: -oso por -ito, e -ico por -ato + metal.'
+                },
+                examples: [
+                    { formula: 'CaCO₃', iupac: 'Trioxocarbonato (IV) de calcio', stock: 'Carbonato de calcio', trad: 'Carbonato cálcico' },
+                    { formula: 'KSO₄', iupac: 'Tetraoxosulfato (VI) de potasio', stock: 'Sulfato de potasio', trad: 'Sulfato potásico' }
+                ]
+            },
+            {
+                id: 'sales-binarias',
+                name: 'Sales Binarias',
+                alias: 'Sales Neutras',
+                formula: 'Metal + No Metal (M + NM)',
+                icon: 'gem',
+                color: 'cyan',
+                desc: 'Compuestos binarios formados por la combinación de un metal (catión) con un no metal (anión). No contienen hidrógeno ni oxígeno.',
+                nomenclatures: {
+                    iupac: 'Prefijo + no metal en -uro + de + prefijo + metal.',
+                    stock: 'No metal en -uro + de + metal + (valencia en romanos).',
+                    tradicional: 'No metal en -uro + metal en -oso / -ico.'
+                },
+                examples: [
+                    { formula: 'NaCl', iupac: 'Cloruro de sodio', stock: 'Cloruro de sodio', trad: 'Cloruro sódico' },
+                    { formula: 'FeCl₃', iupac: 'Tricloruro de hierro', stock: 'Cloruro de hierro (III)', trad: 'Cloruro férrico' }
+                ]
+            }
+        ];
+
+        // Quiz Questions Data
+        const quizQuestions = [
+            {
+                question: '¿Cuál es la nomenclatura tradicional del compuesto H₂SO₄?',
+                options: ['Ácido sulfuroso', 'Ácido sulfúrico', 'Sulfato de hidrógeno', 'Ácido tetraoxosulfúrico'],
+                answer: 1
+            },
+            {
+                question: '¿A qué grupo pertenece la fórmula NaOH?',
+                options: ['Oxiácido', 'Óxido básico', 'Hidróxido', 'Oxisal'],
+                answer: 2
+            },
+            {
+                question: '¿Cuál es la fórmula correcta del Ácido Clorhídrico?',
+                options: ['HClO₃', 'HCl', 'HClO', 'NaCl'],
+                answer: 1
+            }
+        ];
+
+        let currentQuizIndex = 0;
+
+        // Render Cards
+        function renderCards() {
+            const grid = document.getElementById('nodes-grid');
+            grid.innerHTML = compoundsData.map(c => `
+                <div onclick="openModal('${c.id}')" class="node-card glass p-6 rounded-2xl border border-slate-800 cursor-pointer flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <i data-lucide="${c.icon}" class="w-32 h-32"></i>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-sky-400 border border-slate-700">${c.alias}</span>
+                            <i data-lucide="chevron-right" class="w-5 h-5 text-slate-500 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white group-hover:text-sky-400 transition-colors">${c.name}</h3>
+                        <p class="font-mono text-xs text-sky-400 font-semibold mt-1">${c.formula}</p>
+                        <p class="text-xs text-slate-400 mt-3 line-clamp-2">${c.desc}</p>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
+                        <span>Ver Nomenclaturas</span>
+                        <span class="text-sky-400 font-medium">3 Ejemplos &rarr;</span>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // Modal Logic
+        function openModal(id) {
+            const compound = compoundsData.find(c => c.id === id);
+            if (!compound) return;
+
+            document.getElementById('modal-title').innerText = compound.name;
+            document.getElementById('modal-badge').innerText = compound.alias;
+            document.getElementById('modal-formula').innerText = compound.formula;
+            document.getElementById('modal-desc').innerText = compound.desc;
+
+            document.getElementById('modal-nom-iupac').innerText = compound.nomenclatures.iupac;
+            document.getElementById('modal-nom-stock').innerText = compound.nomenclatures.stock;
+            document.getElementById('modal-nom-trad').innerText = compound.nomenclatures.tradicional;
+
+            const examplesContainer = document.getElementById('modal-examples');
+            examplesContainer.innerHTML = compound.examples.map(ex => `
+                <div class="bg-slate-950/60 p-3 rounded-lg border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span class="font-mono text-base font-bold text-sky-400">${ex.formula}</span>
+                    <div class="text-xs space-y-0.5 text-slate-300">
+                        <div><strong class="text-emerald-400">IUPAC:</strong> ${ex.iupac}</div>
+                        <div><strong class="text-indigo-400">Stock:</strong> ${ex.stock}</div>
+                        <div><strong class="text-amber-400">Trad:</strong> ${ex.trad}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+
+        // Tab Navigation
+        function switchTab(tab) {
+            ['map', 'quiz', 'game'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`btn-tab-${t}`).className = 'px-4 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-white hover:bg-slate-800 flex items-center space-x-2';
+            });
+
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            document.getElementById(`btn-tab-${tab}`).className = 'px-4 py-2 text-sm font-medium rounded-lg transition-all bg-sky-600 text-white shadow-lg shadow-sky-600/30 flex items-center space-x-2';
+        }
+
+        // Quiz Logic
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            const q = quizQuestions[currentQuizIndex];
+            container.innerHTML = `
+                <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                    <span>Pregunta ${currentQuizIndex + 1} de ${quizQuestions.length}</span>
+                    <span>Mini-Reto</span>
+                </div>
+                <h4 class="text-lg font-semibold text-white">${q.question}</h4>
+                <div class="space-y-2 mt-4">
+                    ${q.options.map((opt, i) => `
+                        <button onclick="checkAnswer(${i})" class="w-full text-left p-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm text-slate-200 transition-all flex items-center justify-between">
+                            <span>${opt}</span>
+                            <i data-lucide="circle" class="w-4 h-4 text-slate-500"></i>
+                        </button>
+                    `).join('')}
+                </div>
+                <div id="quiz-feedback" class="mt-4 hidden p-3 rounded-lg text-sm text-center font-medium"></div>
+            `;
+            lucide.createIcons();
+        }
+
+        function checkAnswer(index) {
+            const q = quizQuestions[currentQuizIndex];
+            const feedback = document.getElementById('quiz-feedback');
+            feedback.classList.remove('hidden', 'bg-emerald-500/20', 'text-emerald-400', 'bg-rose-500/20', 'text-rose-400');
+            
+            if (index === q.answer) {
+                feedback.classList.add('bg-emerald-500/20', 'text-emerald-400');
+                feedback.innerText = '¡Correcto! Excelente deducción.';
+            } else {
+                feedback.classList.add('bg-rose-500/20', 'text-rose-400');
+                feedback.innerText = 'Incorrecto. ¡Inténtalo de nuevo!';
+            }
+
+            setTimeout(() => {
+                currentQuizIndex = (currentQuizIndex + 1) % quizQuestions.length;
+                renderQuiz();
+            }, 1800);
+        }
+
+        // Drag & Drop / Classifier Game
+        const gameItems = [
+            { formula: 'CO₂', category: 'oxidos-acidos' },
+            { formula: 'Fe₂O₃', category: 'oxidos-basicos' },
+            { formula: 'NaOH', category: 'hidroxidos' },
+            { formula: 'H₂SO₄', category: 'oxiacidos' },
+            { formula: 'HCl', category: 'hidracidos' },
+            { formula: 'NaCl', category: 'sales-binarias' }
+        ];
+
+        function initGame() {
+            const itemsContainer = document.getElementById('drag-items');
+            const targetsContainer = document.getElementById('drop-targets');
+
+            itemsContainer.innerHTML = gameItems.map((item, idx) => `
+                <div onclick="selectGameItem(${idx})" id="game-item-${idx}" class="cursor-pointer bg-slate-800 hover:bg-sky-600 px-4 py-2 rounded-lg text-sm font-mono font-bold text-white border border-slate-700 transition-all select-none">
+                    ${item.formula}
+                </div>
+            `).join('');
+
+            targetsContainer.innerHTML = compoundsData.slice(0, 6).map(c => `
+                <div onclick="placeInTarget('${c.id}')" class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 hover:border-sky-500/50 transition-all cursor-pointer">
+                    <span class="text-xs font-semibold text-sky-400 block mb-1">${c.name}</span>
+                    <div id="target-${c.id}" class="min-h-[40px] flex items-center justify-center border border-dashed border-slate-800 rounded-lg text-xs text-slate-500">
+                        Haz clic aquí para asignar
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        let selectedItemIndex = null;
+
+        function selectGameItem(idx) {
+            gameItems.forEach((_, i) => {
+                const el = document.getElementById(`game-item-${i}`);
+                if (el) el.classList.remove('ring-2', 'ring-sky-400', 'bg-sky-600');
+            });
+            selectedItemIndex = idx;
+            document.getElementById(`game-item-${idx}`).classList.add('ring-2', 'ring-sky-400', 'bg-sky-600');
+        }
+
+        function placeInTarget(targetCat) {
+            if (selectedItemIndex === null) return;
+
+            const item = gameItems[selectedItemIndex];
+            const targetEl = document.getElementById(`target-${targetCat}`);
+
+            if (item.category === targetCat) {
+                targetEl.className = "min-h-[40px] flex items-center justify-center bg-emerald-500/20 text-emerald-400 font-mono font-bold rounded-lg text-sm border border-emerald-500/30";
+                targetEl.innerText = `${item.formula} ✓`;
+                document.getElementById(`game-item-${selectedItemIndex}`).classList.add('hidden');
+                selectedItemIndex = null;
+            } else {
+                targetEl.className = "min-h-[40px] flex items-center justify-center bg-rose-500/20 text-rose-400 font-mono font-bold rounded-lg text-sm border border-rose-500/30";
+                targetEl.innerText = "¡Incorrecto! Intenta otra categoría";
+                setTimeout(() => {
+                    targetEl.className = "min-h-[40px] flex items-center justify-center border border-dashed border-slate-800 rounded-lg text-xs text-slate-500";
+                    targetEl.innerText = "Haz clic aquí para asignar";
+                }, 1500);
+            }
+        }
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            renderCards();
+            renderQuiz();
+            initGame();
+        });
+    </script>
+</body>
+</html>
